@@ -1,0 +1,357 @@
+/* Gestion Rendez-vous Styles */
+.gestion-rdv-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 2rem;
+  border-radius: 0.75rem;
+}
+
+.rdv-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.rdv-header h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.rdv-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: rgb(255, 255, 255);
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
+  border: none;
+}
+
+.stat-icon {
+  font-size: 2rem;
+  min-width: 50px;
+  min-height: 50px;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.stat-value {
+  font-size: 1.45rem;
+  font-weight: 600;
+  color: #555;
+  margin: 0;
+}
+
+.rdv-content {
+  display: grid;
+  grid-template-columns: 200px 1fr 1fr;
+  gap: 2rem;
+}
+
+.rdv-filters {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
+  height: fit-content;
+  border: none;
+}
+
+.rdv-filters h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: #1f2937;
+}
+
+.filter-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-btn {
+  padding: 0.75rem 1rem;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  color: #374151;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+}
+
+.filter-btn:hover {
+  background: #e5e7eb;
+  border-color: #d1d5db;
+}
+
+.filter-btn.active {
+  background: #306cfe;
+  color: white;
+  border-color: #306cfe;
+}
+
+.rdv-list {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
+  border: none;
+}
+
+.rdv-list h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: #1f2937;
+}
+
+.rdv-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.rdv-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 6px rgba(15, 23, 42, 0.06);
+}
+
+.rdv-item:hover {
+  background: #f3f4f6;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.12);
+}
+
+.rdv-item.active {
+  background: #dbeafe;
+  box-shadow: 0 0 0 3px rgba(48, 108, 254, 0.2);
+}
+
+.rdv-item-time {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 0.375rem;
+  min-width: 70px;
+}
+
+.rdv-heure {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #306cfe;
+}
+
+.rdv-date {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.rdv-item-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.rdv-motif {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #1f2937;
+  margin: 0;
+}
+
+.rdv-lieu {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.rdv-statut {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.25rem;
+  text-transform: uppercase;
+}
+
+.statut-bleu {
+  background: #dbeafe;
+  color: #0369a1;
+}
+
+.statut-vert {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.statut-orange {
+  background: #fed7aa;
+  color: #92400e;
+}
+
+.statut-gris {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.statut-rouge {
+  background: #fecaca;
+  color: #991b1b;
+}
+
+.rdv-details {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detail-item label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.detail-item p {
+  font-size: 0.95rem;
+  color: #1f2937;
+  margin: 0;
+}
+
+.details-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.details-section h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  color: #1f2937;
+}
+
+.notes-content {
+  padding: 1rem;
+  background: #f9fafb;
+  border-left: 3px solid #306cfe;
+  border-radius: 0.375rem;
+  color: #374151;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.details-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.rdv-modal {
+  max-width: 500px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  transition: all 0.3s ease;
+}
+
+.radio-label:hover {
+  background: #f9fafb;
+}
+
+.radio-label input[type="radio"] {
+  cursor: pointer;
+}
+
+@media (max-width: 1024px) {
+  .rdv-content {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .rdv-filters {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .rdv-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}

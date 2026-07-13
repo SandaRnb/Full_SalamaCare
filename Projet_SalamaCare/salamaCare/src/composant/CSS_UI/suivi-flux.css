@@ -1,0 +1,455 @@
+/* Suivi Flux Styles */
+.suivi-flux-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 2rem;
+  border-radius: 0.75rem;
+}
+
+.suivi-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.suivi-header h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.suivi-refresh-btn {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.suivi-refresh-btn button {
+  padding: 0.75rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.suivi-refresh-btn button:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.suivi-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.suivi-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.file-attente-section {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
+  border: none;
+}
+
+.file-attente-section h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: #1f2937;
+}
+
+.file-attente-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.file-attente-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 6px rgba(15, 23, 42, 0.06);
+}
+
+.file-item:hover {
+  background: #f3f4f6;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.12);
+}
+
+.file-item.active {
+  background: #dbeafe;
+  box-shadow: 0 0 0 3px rgba(48, 108, 254, 0.2);
+}
+
+.file-item.en-cours {
+  box-shadow: 0 1px 6px rgba(15, 23, 42, 0.06);
+}
+
+.file-position {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  background: #306cfe;
+  color: white;
+  border-radius: 50%;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.file-patient-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.file-nom {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.file-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+}
+
+.file-heure {
+  color: #6b7280;
+}
+
+.file-temps {
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.file-priorite {
+  display: flex;
+  align-items: center;
+  min-width: 100px;
+}
+
+.priorite-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.25rem;
+  text-transform: capitalize;
+}
+
+.priorite-rouge {
+  background: #fecaca;
+  color: #991b1b;
+}
+
+.priorite-orange {
+  background: #fed7aa;
+  color: #92400e;
+}
+
+.priorite-bleu {
+  background: #dbeafe;
+  color: #0369a1;
+}
+
+.priorite-vert {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.file-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  min-width: 40px;
+}
+
+.file-status.attente {
+  opacity: 0.6;
+}
+
+.file-status.appele {
+  animation: pulse 1s infinite;
+}
+
+.file-status.en-cours {
+  color: #10b981;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.patient-flux-details {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  border: none;
+}
+
+.details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.details-header h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+  color: #1f2937;
+}
+
+.details-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.details-section h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  color: #1f2937;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detail-item label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.detail-item p {
+  font-size: 0.95rem;
+  color: #1f2937;
+  margin: 0;
+}
+
+.actions-buttons {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.flux-workflow-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.flux-workflow-section h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+  color: #1f2937;
+}
+
+.workflow-container {
+  background: white;
+  padding: 2rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
+  border: none;
+}
+
+.workflow-steps {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  overflow-x: auto;
+  padding: 1rem 0;
+}
+
+.workflow-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 100px;
+}
+
+.step-icon {
+  font-size: 2rem;
+  margin: 0.5rem 0;
+}
+
+.step-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  text-align: center;
+  text-transform: capitalize;
+}
+
+.step-arrow {
+  font-size: 1.5rem;
+  color: #d1d5db;
+  margin: 0 0.5rem;
+}
+
+.workflow-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.workflow-card {
+  background: white;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.workflow-card h4 {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  margin: 0 0 0.5rem 0;
+}
+
+.workflow-count {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #306cfe;
+  margin: 0;
+}
+
+.performance-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.performance-section h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+  color: #1f2937;
+}
+
+.performance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.performance-card {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.performance-icon {
+  font-size: 2rem;
+  min-width: 50px;
+}
+
+.performance-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.performance-content h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.performance-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #306cfe;
+  margin: 0;
+}
+
+.performance-status {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.performance-bar {
+  width: 100%;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.performance-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #306cfe 0%, #2563eb 100%);
+  border-radius: 3px;
+}
+
+@media (max-width: 768px) {
+  .suivi-content {
+    grid-template-columns: 1fr;
+  }
+
+  .workflow-steps {
+    flex-wrap: wrap;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .performance-grid {
+    grid-template-columns: 1fr;
+  }
+}
