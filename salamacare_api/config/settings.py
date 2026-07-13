@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'responsables',
     'consultations',
     'notifications',
+    'dossier_medical',
 ]
 
 MIDDLEWARE = [

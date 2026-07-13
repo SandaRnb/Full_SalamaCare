@@ -17,4 +17,6 @@ urlpatterns = [
     path('api/consultations/', include('consultations.urls')),
     # path('api/notifications/', include('notifications.urls')),
     path('api/responsables/', include('responsables.urls')),
+    
+    path('api/dossier-medical/', include('dossier_medical.urls')),
 ]

@@ -4,6 +4,26 @@ import Patient, { Dossier }    from './patient'
 import './CSS_UI/patient.css'
 import { getUser, getToken, logout } from '../utils/authStorage'
 
+// ── Fonctions utilitaires ──────────────────────────────────
+const capitalize = (str) => {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
+const calculateAge = (dateString) => {
+    if (!dateString) return '';
+    const today = new Date();
+    const birthDate = new Date(dateString);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    
+    // On retire 1 an si l'anniversaire n'est pas encore passé cette année
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    return age;
+};
+
 export default function PatientDashboard() {
     const navigate = useNavigate()
     const user     = getUser()
@@ -22,12 +42,12 @@ export default function PatientDashboard() {
                         email:     user.email             || '',
                         patientId: user.profil.profil_id  || null,
                         dossier: {
-                            nom:           user.username              || '',
+                            nom:           capitalize(user.username),
                             prenom:        user.profil.prenom         || '',
                             adresse:       user.profil.adresse        || '',
                             telephone:     user.profil.telephone      || '',
                             dateNaissance: user.profil.date_naissance || '',
-                            age:           '',
+                            age:           calculateAge(user.profil.date_naissance),
                             sexe:          user.profil.sexe           || '',
                             groupe:        '',
                             antecedent:    [],
@@ -48,22 +68,23 @@ export default function PatientDashboard() {
                 if (!response.ok) throw new Error('Profil introuvable')
 
                 const data = await response.json()
+                
                 setPatientAccount({
                     id:        data.profil?.profil_id || null,
                     email:     data.email             || '',
                     patientId: data.profil?.profil_id || null,
                     dossier: {
-                        nom:           data.username              || '',
-                        prenom:        data.profil?.prenom        || '',
-                        adresse:       data.profil?.adresse       || '',
-                        telephone:     data.profil?.telephone     || '',
-                        dateNaissance: data.profil?.date_naissance|| '',
-                        age:           '',
-                        sexe:          data.profil?.sexe          || '',
+                        nom:           capitalize(data.username),
+                        prenom:        data.profil?.prenom         || '',
+                        adresse:       data.profil?.adresse        || '',
+                        telephone:     data.profil?.telephone      || '',
+                        dateNaissance: data.profil?.date_naissance || '',
+                        age:           calculateAge(data.profil?.date_naissance),
+                        sexe:          data.profil?.sexe           || '',
                         groupe:        '',
                         antecedent:    [],
                         statut:        'actif',
-                        email:         data.email                 || '',
+                        email:         data.email                  || '',
                     }
                 })
 
