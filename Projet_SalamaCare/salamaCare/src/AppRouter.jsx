@@ -11,14 +11,14 @@ export default function AppRouter() {
       {/* Route publique - Authentification unique */}
       <Route path="/login" element={<Login />} />
       
-      {/* Routes protégées - Responsable */}
-      <Route 
-        path="/dashboard" 
+      {/* Responsable — 2 routes possibles */}
+      <Route
+        path="/dashboard"
         element={
           <PrivateRoute requiredType="responsable">
             <Dashboard />
           </PrivateRoute>
-        } 
+        }
       />
       
       {/* Routes protégées - Patient */}
@@ -41,11 +41,9 @@ export default function AppRouter() {
         } 
       />
       
-      {/* Redirection par défaut */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
-      
-      {/* Route 404 */}
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      {/* Défaut */}
+      <Route path="/"  element={<Navigate to="/login" replace />} />
+      <Route path="*"  element={<Navigate to="/login" replace />} />
     </Routes>
   )
 }

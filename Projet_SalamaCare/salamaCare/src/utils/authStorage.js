@@ -8,7 +8,7 @@ export function getRoleFromToken(token, fallbackRole) {
 export function getDashboardPathByRole(role) {
     switch (role) {
         case 'medecin':     return '/dashboard/medecin'
-        case 'responsable': return '/dashboard/responsable'
+        case 'responsable': return '/dashboard'
         case 'patient':     return '/dashboard/patient'
         default:            return '/dashboard/patient'
     }
