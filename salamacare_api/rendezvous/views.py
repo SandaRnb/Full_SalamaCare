@@ -1,110 +1,345 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+
 from rest_framework.permissions import IsAuthenticated
+
 from users.permissions import IsResponsable
 
+
 from .serializers import (
+
     RendezVousSerializer,
+
     CreerRendezVousSerializer,
-    ModifierStatutSerializer,
+
+    ModifierStatutSerializer
+
 )
+
+
 from .services import (
+
     get_tous_les_rendezvous,
+
     get_rendezvous_par_id,
+
     get_rendezvous_par_patient,
+
     get_rendezvous_par_medecin,
+
     creer_rendezvous,
+
     modifier_statut,
-    annuler_rendezvous,
-    supprimer_rendezvous,
+
+    supprimer_rendezvous
+
 )
 
 
-# ── Liste tous les RDV ────────────────────────────────────
+
+
+
+# ==================================
+# LISTE DES RDV
+# ==================================
+
 class ListeRendezVousView(APIView):
-    permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        rdvs       = get_tous_les_rendezvous()
-        serializer = RendezVousSerializer(rdvs, many=True)
-        return Response({"rendezvous": serializer.data})
+    permission_classes=[
+        IsAuthenticated
+    ]
 
 
-# ── Créer un RDV ──────────────────────────────────────────
+    def get(self,request):
+
+        rdvs = get_tous_les_rendezvous()
+
+
+        serializer = RendezVousSerializer(
+            rdvs,
+            many=True
+        )
+
+
+        return Response({
+
+            "rendezvous":serializer.data
+
+        })
+
+
+
+
+
+
+
+# ==================================
+# CREATION
+# ==================================
+
 class CreerRendezVousView(APIView):
-    permission_classes = [IsResponsable]
 
-    def post(self, request):
-        serializer = CreerRendezVousSerializer(data=request.data)
-        if serializer.is_valid():
-            rdv, erreur = creer_rendezvous(
-                patient_id = serializer.validated_data['patient_id'],
-                medecin_id = serializer.validated_data['medecin_id'],
-                date_heure = serializer.validated_data['date_heure'],
-                motif      = serializer.validated_data['motif'],
-            )
-            if erreur:
-                return Response({"erreur": erreur}, status=status.HTTP_400_BAD_REQUEST)
+    permission_classes=[
+        IsResponsable
+    ]
+
+
+    def post(self,request):
+
+        serializer = CreerRendezVousSerializer(
+            data=request.data
+        )
+
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+
+
+        rdv, erreur = creer_rendezvous(
+            serializer.validated_data
+        )
+
+
+
+        if erreur:
+
             return Response(
-                {"message": "Rendez-vous créé", "rendezvous": RendezVousSerializer(rdv).data},
-                status=status.HTTP_201_CREATED
+                {
+                    "erreur":erreur
+                },
+                status=status.HTTP_400_BAD_REQUEST
             )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# ── Détail / Annuler / Supprimer ──────────────────────────
+
+        return Response(
+
+            {
+                "message":"Rendez-vous créé",
+
+                "rendezvous":
+                    RendezVousSerializer(rdv).data
+            },
+
+            status=status.HTTP_201_CREATED
+        )
+
+
+
+
+
+
+
+# ==================================
+# DETAIL / DELETE
+# ==================================
+
 class DetailRendezVousView(APIView):
-    permission_classes = [IsAuthenticated]
 
-    def get(self, request, rdv_id):
-        rdv = get_rendezvous_par_id(rdv_id)
+    permission_classes=[
+        IsAuthenticated
+    ]
+
+
+
+    def get(self,request,rdv_id):
+
+        rdv=get_rendezvous_par_id(rdv_id)
+
+
+
         if not rdv:
-            return Response({"erreur": "RDV introuvable"}, status=status.HTTP_404_NOT_FOUND)
-        serializer = RendezVousSerializer(rdv)
-        return Response({"rendezvous": serializer.data})
 
-    def delete(self, request, rdv_id):
-        if request.user.role != 'responsable':
-            return Response({"erreur": "Seul un responsable peut supprimer un rendez-vous"}, status=status.HTTP_403_FORBIDDEN)
-        ok = supprimer_rendezvous(rdv_id)
+            return Response(
+                {
+                    "erreur":"RDV introuvable"
+                },
+                status=404
+            )
+
+
+
+        return Response({
+
+            "rendezvous":
+            RendezVousSerializer(rdv).data
+
+        })
+
+
+
+
+
+    def delete(self,request,rdv_id):
+
+        if request.user.role != "responsable":
+
+            return Response(
+                {
+                    "erreur":
+                    "Permission refusée"
+                },
+                status=403
+            )
+
+
+
+        ok=supprimer_rendezvous(rdv_id)
+
+
+
         if not ok:
-            return Response({"erreur": "RDV introuvable"}, status=status.HTTP_404_NOT_FOUND)
-        return Response({"message": "Rendez-vous supprimé"})
+
+            return Response(
+                {
+                    "erreur":"RDV introuvable"
+                },
+                status=404
+            )
 
 
-# ── Modifier statut ───────────────────────────────────────
+
+        return Response({
+
+            "message":
+            "Rendez-vous supprimé"
+
+        })
+
+
+
+
+
+
+
+
+
+# ==================================
+# MODIFIER STATUT
+# ==================================
+
 class ModifierStatutView(APIView):
-    permission_classes = [IsAuthenticated]
 
-    def put(self, request, rdv_id):
-        serializer = ModifierStatutSerializer(data=request.data)
-        if serializer.is_valid():
-            rdv = modifier_statut(rdv_id, serializer.validated_data['statut'])
-            if not rdv:
-                return Response({"erreur": "RDV introuvable"}, status=status.HTTP_404_NOT_FOUND)
-            return Response({
-                "message": "Statut modifié",
-                "rendezvous": RendezVousSerializer(rdv).data
-            })
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    permission_classes=[
+        IsAuthenticated
+    ]
 
 
-# ── RDV par patient ───────────────────────────────────────
+
+    def put(self,request,rdv_id):
+
+        serializer=ModifierStatutSerializer(
+            data=request.data
+        )
+
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+
+
+        rdv=modifier_statut(
+
+            rdv_id,
+
+            serializer.validated_data["statut"]
+
+        )
+
+
+
+        if not rdv:
+
+            return Response(
+                {
+                    "erreur":"RDV introuvable"
+                },
+                status=404
+            )
+
+
+
+        return Response({
+
+            "message":
+            "Statut modifié",
+
+            "rendezvous":
+            RendezVousSerializer(rdv).data
+
+        })
+
+
+
+
+
+
+
+
+
+# ==================================
+# PAR PATIENT
+# ==================================
+
 class RendezVousPatientView(APIView):
-    permission_classes = [IsAuthenticated]
 
-    def get(self, request, patient_id):
-        rdvs       = get_rendezvous_par_patient(patient_id)
-        serializer = RendezVousSerializer(rdvs, many=True)
-        return Response({"rendezvous": serializer.data})
+    permission_classes=[
+        IsAuthenticated
+    ]
 
 
-# ── RDV par médecin ───────────────────────────────────────
+    def get(self,request,patient_id):
+
+        rdvs=get_rendezvous_par_patient(
+            patient_id
+        )
+
+
+        return Response({
+
+            "rendezvous":
+            RendezVousSerializer(
+                rdvs,
+                many=True
+            ).data
+
+        })
+
+
+
+
+
+
+
+
+# ==================================
+# PAR MEDECIN
+# ==================================
+
 class RendezVousMedecinView(APIView):
-    permission_classes = [IsAuthenticated]
 
-    def get(self, request, medecin_id):
-        rdvs       = get_rendezvous_par_medecin(medecin_id)
-        serializer = RendezVousSerializer(rdvs, many=True)
-        return Response({"rendezvous": serializer.data})
+    permission_classes=[
+        IsAuthenticated
+    ]
+
+
+    def get(self,request,medecin_id):
+
+        rdvs=get_rendezvous_par_medecin(
+            medecin_id
+        )
+
+
+        return Response({
+
+            "rendezvous":
+            RendezVousSerializer(
+                rdvs,
+                many=True
+            ).data
+
+        })

@@ -1,49 +1,114 @@
 from rest_framework import serializers
 from .models import RendezVous
-from medecins.models import ProfilMedecin
-from patients.models import ProfilPatient
 
 
-# ── Affichage ─────────────────────────────────────────────
+
 class RendezVousSerializer(serializers.ModelSerializer):
 
-    # Infos du patient
-    patient_nom      = serializers.CharField(source='patient.user.get_full_name', read_only=True)
-    patient_username = serializers.CharField(source='patient.user.username',      read_only=True)
+    patientId = serializers.IntegerField(
+        source="patient.id",
+        read_only=True
+    )
 
-    # Infos du médecin
-    medecin_nom      = serializers.CharField(source='medecin.user.get_full_name', read_only=True)
-    medecin_spec     = serializers.CharField(source='medecin.specialite',         read_only=True)
+    medecinId = serializers.IntegerField(
+        source="medecin.id",
+        read_only=True
+    )
+
+    patientNom = serializers.CharField(
+        source="patient.user.username",
+        read_only=True
+    )
+
+    medecinNom = serializers.CharField(
+        source="medecin.user.username",
+        read_only=True
+    )
+
+    dateHeure = serializers.DateTimeField(
+        source="date_heure"
+    )
+
+    rappelEnvoyé = serializers.BooleanField(
+        source="rappel_envoye"
+    )
+
 
     class Meta:
-        model  = RendezVous
+        model = RendezVous
+
         fields = [
-            'id',
-            'patient_nom', 'patient_username',
-            'medecin_nom', 'medecin_spec',
-            'date_heure', 'motif', 'statut',
-            'created_at',
+
+            "id",
+
+            "patientId",
+            "patientNom",
+
+            "medecinId",
+            "medecinNom",
+
+            "dateHeure",
+
+            "duree",
+
+            "motif",
+
+            "lieu",
+
+            "specialite",
+
+            "notes",
+
+            "statut",
+
+            "rappelEnvoyé",
+
+            "created_at"
+
         ]
 
 
-# ── Création ──────────────────────────────────────────────
+
+
+
 class CreerRendezVousSerializer(serializers.Serializer):
-    patient_id = serializers.IntegerField()
-    medecin_id = serializers.IntegerField()
-    date_heure = serializers.DateTimeField()
-    motif      = serializers.CharField()
 
-    def validate_patient_id(self, value):
-        if not ProfilPatient.objects.filter(id=value).exists():
-            raise serializers.ValidationError("Patient introuvable")
-        return value
+    patientId = serializers.IntegerField()
 
-    def validate_medecin_id(self, value):
-        if not ProfilMedecin.objects.filter(id=value).exists():
-            raise serializers.ValidationError("Médecin introuvable")
-        return value
+    medecinId = serializers.IntegerField()
+
+    dateHeure = serializers.DateTimeField()
+
+    duree = serializers.IntegerField(
+        required=False,
+        default=30
+    )
+
+    motif = serializers.CharField()
+
+    lieu = serializers.CharField(
+        required=False,
+        default="Cabinet"
+    )
+
+    specialite = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        default=""
+    )
+
+    notes = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        default=""
+    )
 
 
-# ── Modification statut ───────────────────────────────────
+
+
+
 class ModifierStatutSerializer(serializers.Serializer):
-    statut = serializers.ChoiceField(choices=RendezVous.Statut.choices)
+
+    statut = serializers.ChoiceField(
+        choices=RendezVous.Statut.values
+    )

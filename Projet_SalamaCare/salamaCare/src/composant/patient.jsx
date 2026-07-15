@@ -126,7 +126,7 @@ const NAV_ITEMS = [
 ]
 
 function SuiviConsultation({ consultations }) {
-    if (!consultations.length) {
+    if (!consultations || consultations.length === 0) {
         return (
             <div className="patient-content">
                 <div className="card">
@@ -210,7 +210,12 @@ function SuiviConsultation({ consultations }) {
     )
 }
 
-export default function Patient({ dossier = Dossier, patientAccount = null, onLogout = () => {} }) {
+export default function Patient({ 
+    dossier = Dossier, 
+    patientAccount = null, 
+    onLogout = () => {},
+    rendezVousBackend = [] 
+}) {
     const [sectionActive, setSectionActive] = useState('dossier')
     const [sharedConsultations, setSharedConsultations] = useState(() => getStoredConsultations())
     const [sharedAppointments, setSharedAppointments] = useState(() => getStoredAppointments())
@@ -233,38 +238,67 @@ export default function Patient({ dossier = Dossier, patientAccount = null, onLo
         }
     }, [])
 
-const dossierCourant = patientAccount?.dossier ? {
-    id_dossier: patientAccount.dossier.id_dossier || patientAccount.id || '',
-    nom: patientAccount.dossier.nom || '',
-    age: patientAccount.dossier.age || '',
-    adresse: patientAccount.dossier.adresse || '',
-    groupe: patientAccount.dossier.groupe || '',
-    antecedent: patientAccount.dossier.antecedent || [],
-    allergies: patientAccount.dossier.allergies || [],
-    telephone: patientAccount.dossier.telephone || '',
-    email: patientAccount.dossier.email || '',
-    statut: patientAccount.dossier.statut || 'actif',
-    dateNaissance: patientAccount.dossier.dateNaissance || '',
-} : {
-    nom: user?.username || '',
-    prenom: '',
-    adresse: user?.profil?.adresse || '',
-    telephone: user?.profil?.telephone || '',
-};
+    // ⚠️ Mise à jour des rendez-vous lorsque les données backend changent
+    useEffect(() => {
+        if (Array.isArray(rendezVousBackend)) {
+            console.log("Mise à jour des RDV depuis le backend :", rendezVousBackend)
+            setSharedAppointments(rendezVousBackend)
+        }
+    }, [rendezVousBackend])
+
+    const dossierCourant = patientAccount?.dossier ? {
+        id_dossier: patientAccount.dossier.id_dossier || patientAccount.id || '',
+        nom: patientAccount.dossier.nom || '',
+        age: patientAccount.dossier.age || '',
+        adresse: patientAccount.dossier.adresse || '',
+        groupe: patientAccount.dossier.groupe || '',
+        antecedent: patientAccount.dossier.antecedent || [],
+        allergies: patientAccount.dossier.allergies || [],
+        telephone: patientAccount.dossier.telephone || '',
+        email: patientAccount.dossier.email || '',
+        statut: patientAccount.dossier.statut || 'actif',
+        dateNaissance: patientAccount.dossier.dateNaissance || '',
+    } : {
+        id_dossier: patientAccount?.id || '',
+        nom: patientAccount?.username || '',
+        prenom: '',
+        adresse: patientAccount?.profil?.adresse || '',
+        telephone: patientAccount?.profil?.telephone || '',
+        groupe: '',
+        antecedent: [],
+        allergies: [],
+        email: patientAccount?.email || '',
+        statut: 'actif',
+        dateNaissance: '',
+    }
 
     const currentPatientId = patientAccount?.patientId || patientAccount?.id || patientAccount?.dossierId || patientAccount?.dossier?.id_dossier || patientAccount?.dossier?.patientId || ''
     const normalizedCurrentPatientId = String(currentPatientId).toLowerCase()
+    
     const patientConsultations = (sharedConsultations || []).filter((consultation) => matchesPatientRecord(consultation, normalizedCurrentPatientId))
-    const patientAppointments = (sharedAppointments || []).filter((appointment) => matchesPatientRecord(appointment, normalizedCurrentPatientId))
+    
+    // ⚠️ Utiliser les rendez-vous backend ou localStorage en fallback
+    let patientAppointments = []
+    
+    if (Array.isArray(rendezVousBackend) && rendezVousBackend.length > 0) {
+        // Priorité aux rendez-vous du backend
+        patientAppointments = rendezVousBackend
+        console.log("Utilisation des RDV backend :", patientAppointments.length)
+    } else {
+        // Fallback sur localStorage
+        patientAppointments = (sharedAppointments || []).filter((appointment) => matchesPatientRecord(appointment, normalizedCurrentPatientId))
+        console.log("Utilisation des RDV localStorage :", patientAppointments.length)
+    }
+
     const consultationsToDisplay = patientConsultations.length ? patientConsultations : patientData.consultations
-    const appointmentsToDisplay = patientAppointments.length ? patientAppointments : patientData.rdv
+    const appointmentsToDisplay = patientAppointments
 
     const renderSection = () => {
         switch (sectionActive) {
             case 'dossier':
                 return <GenererDossier Dossier={dossierCourant} />
             default:
-                return <SuiviConsultation consultations={consultationsToDisplay} rdv={appointmentsToDisplay} />
+                return <SuiviConsultation consultations={consultationsToDisplay} />
         }
     }
 
@@ -276,9 +310,7 @@ const dossierCourant = patientAccount?.dossier ? {
                     <div className="profile-meta">
                         <span className="profile-badge">Patient</span>
                         <h3>{dossierCourant.nom}</h3>
-                        <p>
-                            {dossierCourant.age} ans
-                        </p>
+                        <p>{dossierCourant.age} ans</p>
                     </div>
                 </div>
 

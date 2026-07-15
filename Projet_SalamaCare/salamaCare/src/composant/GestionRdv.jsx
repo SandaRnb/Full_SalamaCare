@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import './CSS_UI/gestion-rdv.css'
-
+import { createAppointmentInBackend } from '../services/backendAdapter'
 
 const IconRendezVous = <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
-	<g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}>
-		<path d="M16 2v4M8 2v4m5-2h-2C7.229 4 5.343 4 4.172 5.172S3 8.229 3 12v2c0 3.771 0 5.657 1.172 6.828S7.229 22 11 22h2c3.771 0 5.657 0 6.828-1.172S21 17.771 21 14v-2c0-3.771 0-5.657-1.172-6.828S16.771 4 13 4M3 10h18"></path>
-		<path d="M9 16.5s1.5.5 2 2c0 0 2.177-4 5-5"></path>
-	</g>
+  <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}>
+    <path d="M16 2v4M8 2v4m5-2h-2C7.229 4 5.343 4 4.172 5.172S3 8.229 3 12v2c0 3.771 0 5.657 1.172 6.828S7.229 22 11 22h2c3.771 0 5.657 0 6.828-1.172S21 17.771 21 14v-2c0-3.771 0-5.657-1.172-6.828S16.771 4 13 4M3 10h18"></path>
+    <path d="M9 16.5s1.5.5 2 2c0 0 2.177-4 5-5"></path>
+  </g>
 </svg>
+
 export default function GestionRdv({
   rendezVous = [],
   onAnnulerRdv,
@@ -38,8 +39,8 @@ export default function GestionRdv({
     return date === new Date().toDateString()
   })
 
-  const rdvFiltrés = filtreStatut === 'tous' 
-    ? rendezVous 
+  const rdvFiltrés = filtreStatut === 'tous'
+    ? rendezVous
     : rendezVous.filter(r => r.statut === filtreStatut)
 
   const getStatusColor = (statut) => {
@@ -61,19 +62,20 @@ export default function GestionRdv({
 
   const getMedecinName = (medecinId) => {
     const medecin = medecins.find(m => m.id === medecinId)
-    return medecin ? `${medecin.prenom} ${medecin.nom}` : 'Médecin non attribué'
+    return medecin ? `${medecin.prenom || ''} ${medecin.nom || ''}`.trim() || medecin.username : 'Médecin non attribué'
   }
 
   const specialtyOptions = Array.from(new Set(medecins.map((medecin) => medecin.specialite).filter(Boolean)))
 
   const availableMedecinsForSelection = medecins.filter((medecin) => {
-    const matchesSpecialty = !formData.specialite || medecin.specialite?.toLowerCase() === formData.specialite.toLowerCase()
-    return matchesSpecialty && medecin.disponibilite !== false
+    return (
+      !formData.specialite ||
+      medecin.specialite?.toLowerCase() === formData.specialite.toLowerCase()
+    )
   })
 
   const buildFormData = (rdv = null) => {
     const selectedMedecin = rdv?.medecinId ? medecins.find((medecin) => medecin.id === rdv.medecinId) : null
-
     return {
       dateHeure: rdv?.dateHeure || '',
       duree: String(rdv?.duree || 30),
@@ -118,8 +120,17 @@ export default function GestionRdv({
     }
   }
 
-  const handleSubmitModal = (event) => {
+  const handleSubmitModal = async (event) => {
     event.preventDefault()
+
+    console.log({
+ patientId: formData.patientId,
+ medecinId: formData.medecinId,
+ dateHeure: formData.dateHeure
+})
+    
+    console.log("====== SUBMIT RDV CLIQUE ======")
+    console.log("FORM DATA :", formData)
 
     if (typeModal === 'nouveau' || typeModal === 'edit') {
       if (!formData.specialite) {
@@ -127,8 +138,12 @@ export default function GestionRdv({
         return
       }
 
-      const selectedDoctor = medecins.find((medecin) => medecin.id === formData.medecinId)
-      const hasAvailableDoctor = availableMedecinsForSelection.some((medecin) => medecin.id === formData.medecinId)
+      const selectedDoctor = medecins.find(
+        (medecin) => String(medecin.id) === String(formData.medecinId)
+      )
+      const hasAvailableDoctor = availableMedecinsForSelection.some(
+        (medecin) => String(medecin.id) === String(formData.medecinId)
+      )
 
       if (!selectedDoctor || !hasAvailableDoctor) {
         setFormError('Aucun médecin disponible n’est actuellement disponible pour cette spécialité.')
@@ -139,30 +154,56 @@ export default function GestionRdv({
     }
 
     if (typeModal === 'nouveau') {
-      const generatedId = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-        ? crypto.randomUUID()
-        : `r${Date.now()}-${Math.random().toString(16).slice(2)}`
+      try {
+        console.log("ENVOI API...")
+        
+        const response = await createAppointmentInBackend({
 
-      const newRdv = {
-        id: generatedId,
-        patientId: formData.patientId || (dossiers[0]?.patientId || dossiers[0]?.id || ''),
-        medecinId: formData.medecinId || null,
-        specialite: formData.specialite,
+        patientId: formData.patientId,
+
+        medecinId: formData.medecinId,
+
         dateHeure: formData.dateHeure,
-        duree: Number(formData.duree) || 30,
-        statut: 'planifié',
-        motif: formData.motif || 'Consultation',
-        lieu: formData.lieu || 'Cabinet',
-        notes: formData.notes || '',
-        rappelEnvoyé: false
-      }
 
-      onAjouterRendezVous?.(newRdv)
-      setRdvSelectionne(newRdv)
+        motif: formData.motif,
+
+        lieu: formData.lieu,
+
+        duree: formData.duree,
+
+        notes: formData.notes
+
+})
+
+        console.log("REPONSE API :", response)
+        console.log("RDV créé backend :", response)
+
+        const newRdv = {
+          ...response,
+          id: response.id || `rdv_${Date.now()}`,
+          patientId: formData.patientId,
+          medecinId: formData.medecinId,
+          dateHeure: formData.dateHeure,
+          duree: Number(formData.duree),
+          statut: "planifié",
+          motif: formData.motif,
+          lieu: formData.lieu,
+          notes: formData.notes
+        }
+
+        onAjouterRendezVous?.(newRdv)
+        setRdvSelectionne(newRdv)
+        setAfficherModal(false)
+      } catch (error) {
+        console.error("Erreur création RDV :", error)
+        setFormError("Impossible de créer le rendez-vous")
+        return
+      }
     }
 
     if (typeModal === 'report' && rdvSelectionne) {
       onReporterRdv?.(rdvSelectionne.id, formData.dateHeure)
+      setAfficherModal(false)
     }
 
     if (typeModal === 'edit' && rdvSelectionne) {
@@ -178,13 +219,13 @@ export default function GestionRdv({
         lieu: formData.lieu,
         notes: formData.notes
       })
+      setAfficherModal(false)
     }
 
     if (typeModal === 'rappel' && rdvSelectionne) {
       window.alert(`Rappel envoyé pour le rendez-vous ${rdvSelectionne.id}`)
+      setAfficherModal(false)
     }
-
-    setAfficherModal(false)
   }
 
   return (
@@ -236,31 +277,31 @@ export default function GestionRdv({
         <div className='rdv-filters'>
           <h3>Filtrer par statut</h3>
           <div className='filter-buttons'>
-            <button 
+            <button
               className={`filter-btn ${filtreStatut === 'tous' ? 'active' : ''}`}
               onClick={() => setFiltreStatut('tous')}
             >
               Tous
             </button>
-            <button 
+            <button
               className={`filter-btn ${filtreStatut === 'planifié' ? 'active' : ''}`}
               onClick={() => setFiltreStatut('planifié')}
             >
               Planifiés
             </button>
-            <button 
+            <button
               className={`filter-btn ${filtreStatut === 'confirmé' ? 'active' : ''}`}
               onClick={() => setFiltreStatut('confirmé')}
             >
               Confirmés
             </button>
-            <button 
+            <button
               className={`filter-btn ${filtreStatut === 'reporté' ? 'active' : ''}`}
               onClick={() => setFiltreStatut('reporté')}
             >
               Reportés
             </button>
-            <button 
+            <button
               className={`filter-btn ${filtreStatut === 'en_cours' ? 'active' : ''}`}
               onClick={() => setFiltreStatut('en_cours')}
             >
@@ -372,8 +413,8 @@ export default function GestionRdv({
                 Modifier
               </button>
               {rdvSelectionne.statut !== 'terminé' && rdvSelectionne.statut !== 'annulé' && (
-                <button 
-                  className='btn-danger' 
+                <button
+                  className='btn-danger'
                   onClick={() => onAnnulerRdv?.(rdvSelectionne.id)}
                 >
                   Annuler
@@ -389,7 +430,10 @@ export default function GestionRdv({
           <div className='modal-content rdv-modal' onClick={(e) => e.stopPropagation()}>
             <div className='modal-header'>
               <h3>
-                {typeModal === 'nouveau' ? 'Créer un rendez-vous' : 'Envoyer un rappel'}
+                {typeModal === 'nouveau' ? 'Créer un rendez-vous' : 
+                 typeModal === 'edit' ? 'Modifier le rendez-vous' :
+                 typeModal === 'report' ? 'Reporter le rendez-vous' :
+                 'Envoyer un rappel'}
               </h3>
               <button className='btn-close' onClick={() => setAfficherModal(false)}>×</button>
             </div>
@@ -466,7 +510,9 @@ export default function GestionRdv({
                             : 'Sélectionner une spécialité'}
                         </option>
                         {availableMedecinsForSelection.map((medecin) => (
-                          <option key={medecin.id} value={medecin.id}>Dr. {medecin.prenom} {medecin.nom}</option>
+                          <option key={medecin.id} value={medecin.id}>
+                            Dr.{medecin.username || ''}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -505,9 +551,16 @@ export default function GestionRdv({
                       rows={2}
                     ></textarea>
                   </div>
+
+                  <div className='modal-footer'>
+                    <button className='btn-secondary' type='button' onClick={() => setAfficherModal(false)}>Annuler</button>
+                    <button className='btn-primary' type='submit'>
+                      {typeModal === 'nouveau' ? 'Créer' : typeModal === 'report' ? 'Reporter' : 'Enregistrer'}
+                    </button>
+                  </div>
                 </form>
               ) : (
-                <form>
+                <form onSubmit={handleSubmitModal}>
                   <div className='form-group'>
                     <label>Type de rappel</label>
                     <div className='radio-group'>
@@ -538,15 +591,15 @@ export default function GestionRdv({
                       Envoyer immédiatement
                     </label>
                   </div>
+
+                  <div className='modal-footer'>
+                    <button className='btn-secondary' type='button' onClick={() => setAfficherModal(false)}>Annuler</button>
+                    <button className='btn-primary' type='submit'>
+                      Envoyer
+                    </button>
+                  </div>
                 </form>
               )}
-            </div>
-
-            <div className='modal-footer'>
-              <button className='btn-secondary' onClick={() => setAfficherModal(false)}>Annuler</button>
-              <button className='btn-primary' onClick={handleSubmitModal} type='button'>
-                {typeModal === 'nouveau' ? 'Créer' : typeModal === 'report' ? 'Reporter' : typeModal === 'edit' ? 'Enregistrer' : 'Envoyer'}
-              </button>
             </div>
           </div>
         </div>

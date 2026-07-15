@@ -1,109 +1,251 @@
-import { getToken } from '../utils/authStorage'
+import { getToken } from "../utils/authStorage"
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
 
-// Fonction de base
-const fetchFromBackend = async (url) => {
+
+const BASE_URL =
+    import.meta.env.VITE_API_BASE_URL ||
+    "http://127.0.0.1:8000"
+
+
+
+
+
+// FETCH GENERAL
+
+const fetchFromBackend = async(url)=>{
+
 
     const token = getToken()
 
-    console.log("TOKEN ENVOYE :", token)
 
-    const response = await fetch(`${BASE_URL}${url}`, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        }
-    })
+    console.log(
+        "TOKEN ENVOYE API :",
+        token
+    )
 
-    if (!response.ok) {
-        throw new Error(`Erreur ${response.status}`)
+
+
+    const headers = {
+
+        "Content-Type":
+            "application/json"
+
     }
 
+
+
+    if(token){
+
+        headers.Authorization =
+            `Bearer ${token}`
+
+    }
+
+
+
+
+    const response =
+        await fetch(
+            `${BASE_URL}${url}`,
+            {
+                headers
+            }
+        )
+
+
+
+    if(!response.ok){
+
+        const error =
+            await response.text()
+
+
+        console.error(
+            "ERREUR API :",
+            error
+        )
+
+
+        throw new Error(
+            `Erreur ${response.status}`
+        )
+
+    }
+
+
+
     return await response.json()
+
+
 }
 
-// Patients
-export const fetchPatientsFromBackend = async () => {
-    const data = await fetchFromBackend('/api/patients/')
-    return data.patients
+
+
+
+
+// ================================
+// PATIENTS
+// ================================
+
+
+export const fetchPatientsFromBackend =
+async()=>{
+
+
+    const data =
+        await fetchFromBackend(
+            "/api/patients/"
+        )
+
+
+    console.log(
+        "PATIENT API :",
+        data
+    )
+
+
+    return (
+        data.patients ||
+        data.results ||
+        data
+    )
+
+
 }
 
-// Médecins
-export const fetchDoctorsFromBackend = async () => {
-    const data = await fetchFromBackend('/api/medecins/')
-    return data.medecins
+
+
+
+
+
+
+// ================================
+// MEDECINS
+// ================================
+
+
+export const fetchDoctorsFromBackend =
+async()=>{
+
+
+    const data =
+        await fetchFromBackend(
+            "/api/medecins/"
+        )
+
+
+    console.log(
+        "MEDECIN API :",
+        data
+    )
+
+
+    return (
+
+        data.medecins ||
+        data.results ||
+        data
+
+    )
+
+
 }
 
-// Rendez-vous
-export const fetchAppointmentsFromBackend = async () => {
-    const data = await fetchFromBackend('/api/rendezvous/')
-    return data.rendezvous
+
+
+
+
+
+// ================================
+// RENDEZ VOUS
+// ================================
+
+
+export const fetchAppointmentsFromBackend =
+async()=>{
+
+
+    const data =
+        await fetchFromBackend(
+            "/api/rendezvous/"
+        )
+
+
+    console.log(
+        "RDV API :",
+        data
+    )
+
+
+    return (
+
+        data.rendezvous ||
+        data.results ||
+        data
+
+    )
+
+
 }
 
-// Rendez-vous par médecin
-export const fetchAppointmentsByMedecin = async (medecin_id) => {
-    const data = await fetchFromBackend(`/api/rendezvous/medecin/${medecin_id}/`)
-    return data.rendezvous
-}
 
-// Rendez-vous par patient
-export const fetchAppointmentsByPatient = async (patient_id) => {
-    const data = await fetchFromBackend(`/api/rendezvous/patient/${patient_id}/`)
-    return data.rendezvous
-}
 
-// Consultations
-export const fetchConsultationsFromBackend = async () => {
-    const data = await fetchFromBackend('/api/consultations/')
-    return data.consultations
-}
 
-// Ajouter un RDV
+
+
+// ================================
+// CREATION RDV
+// ================================
+
+
 export const createAppointmentInBackend = async (rdvData) => {
+
+    console.log("DONNEES ENVOYEES AU BACKEND :", rdvData)
+
     const response = await fetch(`${BASE_URL}/api/rendezvous/creer/`, {
+
         method: 'POST',
+
         headers: {
-            'Content-Type':  'application/json',
+            'Content-Type': 'application/json',
             'Authorization': `Bearer ${getToken()}`
         },
+
         body: JSON.stringify({
-            patient_id: rdvData.patientId,
-            medecin_id: rdvData.medecinId,
-            date_heure: rdvData.dateHeure,
-            motif:      rdvData.motif,
+
+            patientId: Number(rdvData.patientId),
+
+            medecinId: Number(rdvData.medecinId),
+
+            dateHeure: rdvData.dateHeure,
+
+            motif: rdvData.motif,
+
+            lieu: rdvData.lieu || "",
+
+            duree: Number(rdvData.duree) || 30,
+
+            notes: rdvData.notes || ""
+
         })
     })
-    if (!response.ok) throw new Error('Erreur création RDV')
-    return await response.json()
-}
 
-// Modifier statut RDV
-export const updateAppointmentStatus = async (rdv_id, statut) => {
-    const response = await fetch(`${BASE_URL}/api/rendezvous/${rdv_id}/statut/`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type':  'application/json',
-            'Authorization': `Bearer ${getToken()}`
-        },
-        body: JSON.stringify({ statut })
-    })
-    if (!response.ok) throw new Error('Erreur modification statut')
-    return await response.json()
-}
 
-// Notifications
-export const fetchNotificationsFromBackend = async () => {
-    const data = await fetchFromBackend('/api/notifications/')
-    return data.notifications
-}
+    const data = await response.json()
 
-export const markNotificationAsRead = async (notification_id) => {
-    
-    const response = await fetch(`${BASE_URL}/api/notifications/${notification_id}/lu/`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${getToken()}` }
-    })
-    if (!response.ok) throw new Error('Erreur notification')
-    return await response.json()
+
+    if(!response.ok){
+
+        console.error(
+            "ERREUR BACKEND RDV :",
+            data
+        )
+
+        throw new Error(
+            "Erreur création RDV"
+        )
+    }
+
+
+    return data
 }
