@@ -5,17 +5,11 @@ import { getStoredAppointments, getStoredConsultations, matchesPatientRecord } f
 
 export const Dossier = {
     id_dossier: 1,
-    nom: 'ANDRIANANTENAINA',
-    prenom: 'Sarobidy',
-    age: 30,
-    adresse: 'Ankorondrano',
-    sexe: 'Homme',
-    groupe: 'O+',
-    antecedent: [
-        'Allérgie',
-        'Hypertension',
-        'Ashme'
-    ]
+    nom: '',
+    age: '',
+    adresse: '',
+    groupe: '',
+    antecedent: []
 }
 
 const PATIENT_DATA_BY_ID = {
@@ -239,26 +233,24 @@ export default function Patient({ dossier = Dossier, patientAccount = null, onLo
         }
     }, [])
 
-    const dossierCourant = patientAccount?.dossier ? {
-    id_dossier:    patientAccount.dossier.id_dossier    || patientAccount.id || '',
-    nom:           patientAccount.dossier.nom            || '',
-    prenom:        patientAccount.dossier.prenom         || '',
-    age:           patientAccount.dossier.age            || '',
-    adresse:       patientAccount.dossier.adresse        || '',
-    sexe:          patientAccount.dossier.sexe           || '',
-    groupe:        patientAccount.dossier.groupe         || '',
-    antecedent:    patientAccount.dossier.antecedent     || [],
-    telephone:     patientAccount.dossier.telephone      || '',
-    email:         patientAccount.dossier.email          || user?.email || '',
-    statut:        patientAccount.dossier.statut         || 'actif',
-    dateNaissance: patientAccount.dossier.dateNaissance  || '',
+const dossierCourant = patientAccount?.dossier ? {
+    id_dossier: patientAccount.dossier.id_dossier || patientAccount.id || '',
+    nom: patientAccount.dossier.nom || '',
+    age: patientAccount.dossier.age || '',
+    adresse: patientAccount.dossier.adresse || '',
+    groupe: patientAccount.dossier.groupe || '',
+    antecedent: patientAccount.dossier.antecedent || [],
+    allergies: patientAccount.dossier.allergies || [],
+    telephone: patientAccount.dossier.telephone || '',
+    email: patientAccount.dossier.email || '',
+    statut: patientAccount.dossier.statut || 'actif',
+    dateNaissance: patientAccount.dossier.dateNaissance || '',
 } : {
-    // ← si pas de patientAccount du tout
-    nom:      user?.username || '',
-    prenom:   '',
-    adresse:  user?.profil?.adresse   || '',
+    nom: user?.username || '',
+    prenom: '',
+    adresse: user?.profil?.adresse || '',
     telephone: user?.profil?.telephone || '',
-}
+};
 
     const currentPatientId = patientAccount?.patientId || patientAccount?.id || patientAccount?.dossierId || patientAccount?.dossier?.id_dossier || patientAccount?.dossier?.patientId || ''
     const normalizedCurrentPatientId = String(currentPatientId).toLowerCase()
@@ -283,8 +275,10 @@ export default function Patient({ dossier = Dossier, patientAccount = null, onLo
                     <img className="profile-avatar" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRaMXgiRLzm0Z5YBZ7l6CjDamfid8VifEWj-qsWUMYpFw&s=10" alt="Portrait patient" />
                     <div className="profile-meta">
                         <span className="profile-badge">Patient</span>
-                        <h3>{dossierCourant.nom} {dossierCourant.prenom}</h3>
-                        <p>{dossierCourant.sexe} · {dossierCourant.age} ans</p>
+                        <h3>{dossierCourant.nom}</h3>
+                        <p>
+                            {dossierCourant.age} ans
+                        </p>
                     </div>
                 </div>
 
@@ -328,7 +322,7 @@ export default function Patient({ dossier = Dossier, patientAccount = null, onLo
                 <div className="patient-main-header">
                     <div>
                         <p className="eyebrow">Espace patient</p>
-                        <h1>Bonjour {dossierCourant.prenom}</h1>
+                        <h1>Bonjour {dossierCourant.nom}</h1>
                         <p className="section-description">Consultez votre dossier médical, gérez vos rendez-vous et suivez vos consultations en un seul endroit.</p>
                     </div>
                     <div className="stat-grid">

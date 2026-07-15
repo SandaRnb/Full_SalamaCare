@@ -1,4 +1,19 @@
 from .models import ProfilPatient
+from .serializers import RegisterPatientSerializer
+
+
+class RegisterPatientService:
+
+    @staticmethod
+    def register_patient(data):
+
+        serializer = RegisterPatientSerializer(data=data)
+
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.save()
+
+        return user.patient
 
 
 def get_tous_les_patients():
@@ -31,3 +46,4 @@ def supprimer_patient(patient_id):
         return True
     except ProfilPatient.DoesNotExist:
         return False
+    

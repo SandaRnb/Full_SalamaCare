@@ -107,6 +107,22 @@ SIMPLE_JWT = {                                             # ← ajouté ✅
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
 }
 
+# 1. Assure-toi que les en-têtes d'authentification sont autorisés
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",  # <-- TRÈS IMPORTANT, sans ça le navigateur bloque le header
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
+
+# 2. Permet d'envoyer des identifiants (tokens, cookies, sessions)
+CORS_ALLOW_CREDENTIALS = True
+
 # ─── CORS ─────────────────────────────────────────────────────
 CORS_ALLOWED_ORIGINS = [                                   # ← ajouté ✅
     'http://localhost:5173',    # React dev

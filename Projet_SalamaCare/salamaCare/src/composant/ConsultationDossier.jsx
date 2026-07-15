@@ -6,10 +6,8 @@ export default function GenererDossier({Dossier}){
          <div className="dossier-patient">
             <h2>Mon dossier médical</h2>
             <div className="informations-personnelles">
-             <p className="info-perso nom"> Nom: {Dossier.nom}</p>
-             <p className="info-perso prenom"> Prénom: {Dossier.prenom}</p>
+             <p className="info-perso nom"> Nom et prénoms: {Dossier.nom}</p>
              <p className="info-perso age"> Age: {Dossier.age} ans</p>
-             <p className="info-perso sexe"> Sexe: {Dossier.sexe}</p>
              <p className="info-perso adresse"> Adresse: {Dossier.adresse}</p>
              <p className="info-perso "> Groupe sanguin: {Dossier.groupe}</p>
               <ul className="liste-antecedent">

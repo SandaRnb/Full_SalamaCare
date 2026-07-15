@@ -1,13 +1,34 @@
-﻿
-import './CSS_UI/responsable.css'
-import { useState } from 'react'
+﻿import './CSS_UI/responsable.css'
+import { useState, useEffect } from 'react'
 import { ListeNotifications } from './Notifications'
 
 export default function NavBarResponsable({ searchValue, onSearchChange, notifications = [] }) {
     const [afficherNotifications, setAfficherNotifications] = useState(false)
     const [afficherMessage, setAfficherMessage] = useState(false)
+    const [userName, setUserName] = useState('Responsable') // Valeur par défaut alternative
 
     const notificationCount = notifications.length
+
+    // 1. Récupération dynamique du nom de l'utilisateur connecté
+    useEffect(() => {
+        try {
+            const userSession = localStorage.getItem('user')
+            if (userSession) {
+                const userObj = JSON.parse(userSession)
+                // On cherche d'abord un nom, sinon un prénom, sinon la partie avant le @ de l'email
+                const nameToDisplay = userObj.name || userObj.username || userObj.email?.split('@')[0] || 'Responsable'
+                setUserName(nameToDisplay)
+            }
+        } catch (error) {
+            console.error("Erreur lors de la récupération du nom utilisateur :", error)
+        }
+    }, [])
+
+    // 2. Fonction utilitaire pour appliquer le Capitalize (ex: "tojo" -> "Tojo")
+    const capitalize = (str) => {
+        if (!str) return ''
+        return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+    }
 
     return (
         <nav className="navbar-responsable bg-base-100">
@@ -26,7 +47,6 @@ export default function NavBarResponsable({ searchValue, onSearchChange, notific
                     </svg>
                     {afficherNotifications && <ListeNotifications items={notifications} />}
                 </div>
-                
             </div>
             
             <div className="navbar-search-section">
@@ -52,9 +72,11 @@ export default function NavBarResponsable({ searchValue, onSearchChange, notific
 
             {/* Profile Section */}
             <div className="navbar-profile-section">
-            <span className="profile-name">Tojo</span>
+                {/* On applique le capitalize ici sur le nom dynamique */}
+                <span className="profile-name">{capitalize(userName)}</span>
                 <img 
-                    src="https://th.bing.com/th/id/OIP.U0lavRZhl9Y5-e_-UiptAwHaHa?w=172&h=180&c=7&r=0&o=7&pid=1.7&rm=3"alt="Photo de profil" 
+                    src="https://th.bing.com/th/id/OIP.U0lavRZhl9Y5-e_-UiptAwHaHa?w=172&h=180&c=7&r=0&o=7&pid=1.7&rm=3" 
+                    alt="Photo de profil" 
                     className="profile-image" 
                 />
             </div>

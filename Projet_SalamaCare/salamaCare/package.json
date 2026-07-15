@@ -13,6 +13,7 @@
     "@faker-js/faker": "^10.5.0",
     "@iconify-react/famicons": "^1.0.2",
     "@react-login-page/page3": "^1.0.6",
+    "axios": "^1.18.1",
     "chart.js": "^4.5.1",
     "iconify-icon": "^3.0.2",
     "react": "^19.2.6",

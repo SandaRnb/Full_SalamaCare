@@ -1,42 +1,184 @@
 from django.shortcuts import get_object_or_404
+from django.db import transaction
+
 from .models import DossierMedical
 from patients.models import ProfilPatient
+from patients.serializers import RegisterPatientSerializer
+
 
 class DossierMedicalService:
-    
+
     @staticmethod
-    def get_or_create_dossier(user):
-        """Récupère ou initialise le dossier médical à partir du ProfilPatient de l'user."""
-        # 1. On récupère d'abord le profil du patient lié à l'utilisateur connecté
-        profil_patient = get_object_or_404(ProfilPatient, user=user)
-        
-        # 2. On récupère ou crée le dossier médical lié à ce profil patient
-        dossier, created = DossierMedical.objects.get_or_create(patient=profil_patient)
+    @transaction.atomic
+    def create_dossier(data):
+        """
+        Crée un Patient puis son Dossier Médical.
+        """
+
+        patient_data = {
+            "username": data.get("username", ""),
+            "email": data.get("email"),
+            "password": data.get("password"),
+            "password2": data.get("password2"),
+            "date_naissance": data.get("date_naissance"),
+            "adresse": data.get("adresse"),
+            "telephone": data.get("telephone"),
+        }
+
+        serializer = RegisterPatientSerializer(data=patient_data)
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.save()
+
+        profil_patient = user.patient
+
+        dossier = DossierMedical.objects.create(
+            patient=profil_patient,
+            groupe_sanguin=data.get("groupe_sanguin"),
+            antecedents_medicaux=data.get("antecedents_medicaux"),
+            allergies=data.get("allergies"),
+        )
+
         return dossier
 
     @staticmethod
-    def update_dossier(user, data):
-        """Met à jour les données médicales (et éventuellement le profil patient)."""
-        profil_patient = get_object_or_404(ProfilPatient, user=user)
-        dossier = get_object_or_404(DossierMedical, patient=profil_patient)
-        
-        # Séparation des champs médicaux et des champs du profil de base
-        dossier_fields = ['groupe_sanguin', 'antecedents_medicaux']
-        profil_fields = ['adresse', 'telephone', 'date_naissance']
-        
-        # Mise à jour du dossier médical
-        for field in dossier_fields:
-            if field in data:
-                setattr(dossier, field, data[field])
-        dossier.save()
-        
-        # Optionnel : permettre aussi de mettre à jour le profil de base depuis cette API
-        profil_updated = False
-        for field in profil_fields:
-            if field in data:
-                setattr(profil_patient, field, data[field])
-                profil_updated = True
-        if profil_updated:
-            profil_patient.save()
-            
+    def get_mon_dossier(user):
+        """
+        Retourne le dossier du patient connecté.
+        """
+
+        profil = get_object_or_404(
+            ProfilPatient,
+            user=user
+        )
+
+        dossier = get_object_or_404(
+            DossierMedical.objects.select_related(
+                "patient",
+                "patient__user"
+            ),
+            patient=profil
+        )
+
         return dossier
+
+    @staticmethod
+    def get_tous_les_dossiers():
+        """
+        Retourne tous les dossiers.
+        """
+
+        return DossierMedical.objects.select_related(
+            "patient",
+            "patient__user"
+        ).all()
+
+    @staticmethod
+    def get_dossier(pk):
+        """
+        Retourne un dossier par son id.
+        """
+
+        return get_object_or_404(
+            DossierMedical.objects.select_related(
+                "patient",
+                "patient__user"
+            ),
+            pk=pk
+        )
+
+    @staticmethod
+    @transaction.atomic
+    def update_mon_dossier(user, data):
+        """
+        Met à jour le dossier du patient connecté.
+        """
+
+        profil = get_object_or_404(
+            ProfilPatient,
+            user=user
+        )
+
+        dossier = get_object_or_404(
+            DossierMedical,
+            patient=profil
+        )
+
+        if "groupe_sanguin" in data:
+            dossier.groupe_sanguin = data["groupe_sanguin"]
+
+        if "antecedents_medicaux" in data:
+            dossier.antecedents_medicaux = data["antecedents_medicaux"]
+
+        if "allergies" in data:
+            dossier.allergies = data["allergies"]
+
+        dossier.save()
+
+        return dossier
+
+    @staticmethod
+    @transaction.atomic
+    def update_dossier(pk, data):
+        """
+        Met à jour un dossier par son id.
+        """
+
+        dossier = get_object_or_404(
+            DossierMedical,
+            pk=pk
+        )
+
+        if "groupe_sanguin" in data:
+            dossier.groupe_sanguin = data["groupe_sanguin"]
+
+        if "antecedents_medicaux" in data:
+            dossier.antecedents_medicaux = data["antecedents_medicaux"]
+
+        if "allergies" in data:
+            dossier.allergies = data["allergies"]
+
+        dossier.save()
+
+        return dossier
+
+    @staticmethod
+    @transaction.atomic
+    def delete_mon_dossier(user):
+        """
+        Supprime le dossier et le compte du patient connecté.
+        """
+
+        profil = get_object_or_404(
+            ProfilPatient,
+            user=user
+        )
+
+        dossier = get_object_or_404(
+            DossierMedical,
+            patient=profil
+        )
+
+        dossier.delete()
+        profil.user.delete()
+
+        return True
+
+    @staticmethod
+    @transaction.atomic
+    def delete_dossier(pk):
+        """
+        Supprime le dossier ainsi que le patient associé.
+        """
+
+        dossier = get_object_or_404(
+            DossierMedical,
+            pk=pk
+        )
+
+        user = dossier.patient.user
+
+        dossier.delete()
+        user.delete()
+
+        return True

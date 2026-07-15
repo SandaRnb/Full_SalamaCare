@@ -1,25 +1,67 @@
-import { useState } from 'react'
-import './CSS_UI/gestion-dossier.css'
+import { useState, useEffect } from "react";
+import axios from "axios";
+import "./CSS_UI/gestion-dossier.css";
 
-export default function GestionDossier({ dossiers = [], rendezVous = [], medecins = [], onAjouterDossier = () => {}, onModifierDossier = () => {}, searchQuery = '' }) {
-  const [dossierSelectionne, setDossierSelectionne] = useState(null)
-  const [afficherModal, setAfficherModal] = useState(false)
-  const [typeModal, setTypeModal] = useState('nouveau')
+export default function GestionDossier({ 
+  rendezVous = [], 
+  medecins = [], 
+  onAjouterDossier = () => {}, 
+  onModifierDossier = () => {}, 
+  searchQuery = '' 
+}) {
+
+  // ÉTAT LOCAL : Liste des dossiers synchronisée avec ton API Django
+  const [listeDossiers, setListeDossiers] = useState([]);
+  const [dossierSelectionne, setDossierSelectionne] = useState(null);
+  const [afficherModal, setAfficherModal] = useState(false);
+  const [typeModal, setTypeModal] = useState("nouveau");
+
   const [formData, setFormData] = useState({
-    nomPatient: '',
-    dateNaissance: '',
-    email: '',
-    telephone: '',
-    adresse: '',
-    groupeSanguin: '',
-    antecedents: '',
-    allergies: '',
-    password: '',
-    dateCreation: '',
+    nomPatient: "",
+    dateNaissance: "",
+    email: "",
+    telephone: "",
+    adresse: "",
+    groupeSanguin: "",
+    antecedents: "",
+    allergies: "",
+    password: ""
+  });
+
+useEffect(() => {
+  // On récupère la bonne clé définie par ta fonction saveSession !
+  const token = localStorage.getItem("access_token"); 
+  
+  console.log("Token envoyé à Django :", token);
+
+  if (!token) {
+    console.error("Aucun token trouvé, l'utilisateur n'est probablement pas connecté.");
+    return;
+  }
+
+  axios({
+    method: 'get',
+    url: 'http://127.0.0.1:8000/api/dossier-medical/liste/',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
   })
+  .then(res => {
+    console.log("Succès ! Données reçues :", res.data);
+    if (Array.isArray(res.data)) {
+      setListeDossiers(res.data);
+    } else if (res.data && Array.isArray(res.data.results)) {
+      setListeDossiers(res.data.results);
+    }
+  })
+  .catch(err => {
+    console.error("❌ Erreur retournée par Django :", err.response?.status, err.response?.data);
+  });
+}, []);
 
   const handleAjouterDossier = () => {
-    setTypeModal('nouveau')
+    setTypeModal('nouveau');
     setFormData({
       nomPatient: '',
       dateNaissance: '',
@@ -29,57 +71,68 @@ export default function GestionDossier({ dossiers = [], rendezVous = [], medecin
       groupeSanguin: '',
       antecedents: '',
       allergies: '',
+      password: '',
       dateCreation: new Date().toISOString().split('T')[0],
-    })
-    setAfficherModal(true)
-  }
+    });
+    setAfficherModal(true);
+  };
 
   const handleAjouterDocument = () => {
     if (dossierSelectionne) {
-      setTypeModal('document')
-      setAfficherModal(true)
+      setTypeModal('document');
+      setAfficherModal(true);
     }
-  }
+  };
 
   const handleModifierDossier = () => {
     if (dossierSelectionne) {
-      setTypeModal('edit')
+      setTypeModal('edit');
       setFormData({
-        nomPatient: dossierSelectionne.nomPatient || '',
-        dateNaissance: dossierSelectionne.dateNaissance || '',
+        nomPatient: dossierSelectionne.username || '',
+        dateNaissance: dossierSelectionne.date_naissance || '',
         email: dossierSelectionne.email || '',
         telephone: dossierSelectionne.telephone || '',
         adresse: dossierSelectionne.adresse || '',
-        groupeSanguin: dossierSelectionne.groupeSanguin || '',
-        antecedents: dossierSelectionne.antecedents || '',
-        allergies: Array.isArray(dossierSelectionne.allergies) ? dossierSelectionne.allergies.join(', ') : '',
-        password: dossierSelectionne.password || '',
-        dateCreation: dossierSelectionne.dateCreation || new Date().toISOString().split('T')[0],
-      })
-      setAfficherModal(true)
+        groupeSanguin: dossierSelectionne.groupe_sanguin || '',
+        antecedents: dossierSelectionne.antecedents_medicaux || '',
+        allergies: dossierSelectionne.allergies || '',
+        password: '',
+        dateCreation: dossierSelectionne.created_at ? dossierSelectionne.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
+      });
+      setAfficherModal(true);
     }
-  }
+  };
 
   const getMedecinNom = (medecin) => {
-    return medecin ? `${medecin.nom} ${medecin.prenom}` : 'Aucun médecin assigné'
-  }
+    return medecin ? `${medecin.nom || ''} ${medecin.prenom || ''}` : 'Aucun médecin assigné';
+  };
 
   const formatDate = (dateString) => {
-    if (!dateString) return '-'
-    return new Date(dateString).toLocaleDateString('fr-FR')
-  }
+    if (!dateString) return '-';
+    try {
+      return new Date(dateString).toLocaleDateString('fr-FR');
+    } catch (e) {
+      return '-';
+    }
+  };
 
   const getSelectedRendezVous = () => {
-    if (!dossierSelectionne) return []
-    return rendezVous.filter(rdv => rdv.patientId === dossierSelectionne.patientId)
-  }
+    if (!dossierSelectionne) return [];
+    return (rendezVous || []).filter(rdv => rdv.patientId === dossierSelectionne.id);
+  };
 
-  const filteredDossiers = searchQuery
-    ? dossiers.filter(d => (d.nomPatient || '').toLowerCase().includes(searchQuery.toLowerCase()) || (d.patientId || '').toLowerCase().includes(searchQuery.toLowerCase()))
-    : dossiers
+  // FILTRAGE ET RECHERCHE
+  const query = (searchQuery || '').trim().toLowerCase();
+  const filteredDossiers = query
+    ? (listeDossiers || []).filter(d => {
+        const nom = (d.username || '').toLowerCase();
+        const id = String(d.id || '').toLowerCase();
+        return nom.includes(query) || id.includes(query);
+      })
+    : (listeDossiers || []);
 
   const handleCreateFromSearch = () => {
-    setTypeModal('nouveau')
+    setTypeModal('nouveau');
     setFormData({
       nomPatient: searchQuery,
       dateNaissance: '',
@@ -91,77 +144,52 @@ export default function GestionDossier({ dossiers = [], rendezVous = [], medecin
       allergies: '',
       password: '',
       dateCreation: new Date().toISOString().split('T')[0],
-    })
-    setAfficherModal(true)
-  }
+    });
+    setAfficherModal(true);
+  };
 
-  const handleSubmitDossier = (event) => {
-    event.preventDefault()
+  const handleSubmitDossier = async (e) => {
+    e.preventDefault();
 
-    if (typeModal === 'edit' && dossierSelectionne) {
-      const updatedDossier = {
-        ...dossierSelectionne,
-        nomPatient: formData.nomPatient || dossierSelectionne.nomPatient,
-        dateNaissance: formData.dateNaissance,
-        email: formData.email,
-        password: formData.password,
-        telephone: formData.telephone,
-        adresse: formData.adresse,
-        groupeSanguin: formData.groupeSanguin,
-        antecedents: formData.antecedents,
-        allergies: formData.allergies.split(',').map(item => item.trim()).filter(Boolean),
-        dateCreation: formData.dateCreation || dossierSelectionne.dateCreation,
-        dateModification: new Date().toISOString().split('T')[0],
-        historique: [
-          ...(dossierSelectionne.historique || []),
-          {
-            id: `h${Date.now()}`,
-            action: 'Modification du dossier',
-            dateAction: new Date().toISOString(),
-            utilisateur: 'Responsable',
-            details: `Dossier mis à jour pour ${formData.nomPatient || dossierSelectionne.nomPatient}`
-          }
-        ]
-      }
-
-      onModifierDossier(updatedDossier)
-      setDossierSelectionne(updatedDossier)
-      setAfficherModal(false)
-      return
-    }
-
-    const newDossier = {
-      id: `d${Date.now()}`,
-      patientId: `p${Date.now()}`,
-      nomPatient: formData.nomPatient || 'Nouveau patient',
-      dateNaissance: formData.dateNaissance,
+    const data = {
+      username: formData.nomPatient,
       email: formData.email,
       password: formData.password,
+      password2: formData.password,
+      date_naissance: formData.dateNaissance,
       telephone: formData.telephone,
       adresse: formData.adresse,
-      groupeSanguin: formData.groupeSanguin,
-      antecedents: formData.antecedents,
-      allergies: formData.allergies.split(',').map(item => item.trim()).filter(Boolean),
-      dateCreation: formData.dateCreation || new Date().toISOString().split('T')[0],
-      dateModification: new Date().toISOString().split('T')[0],
-      statut: 'actif',
-      documents: [],
-      medecin: null,
-      historique: [
-        {
-          id: `h${Date.now()}`,
-          action: 'Création du dossier',
-          dateAction: new Date().toISOString(),
-          utilisateur: 'Responsable',
-          details: `Dossier créé pour le patient ${formData.nomPatient}`
-        }
-      ]
-    }
+      groupe_sanguin: formData.groupeSanguin,
+      antecedents_medicaux: formData.antecedents,
+      allergies: formData.allergies
+    };
 
-    onAjouterDossier(newDossier)
-    setDossierSelectionne(newDossier)
-    setAfficherModal(false)
-  }
+    try {
+      // Ajustement de la route de création si nécessaire (à adapter selon ton urls.py de création)
+      const response = await axios.post("http://127.0.0.1:8000/api/dossier-medical/create/", data);
+      const dossierBrut = response.data.dossier || response.data;
+
+      const nouveauDossier = {
+        ...dossierBrut,
+        username: dossierBrut.username || formData.nomPatient,
+        documents: dossierBrut.documents || [],
+        historique: dossierBrut.historique || []
+      };
+
+      setListeDossiers(prevDossiers => [nouveauDossier, ...prevDossiers]);
+
+      if (typeof onAjouterDossier === "function") {
+        onAjouterDossier(nouveauDossier);
+      }
+
+      setDossierSelectionne(nouveauDossier);
+      setAfficherModal(false);
+
+    } catch (error) {
+      console.error("Erreur lors de la création du dossier :", error.response?.data || error);
+      alert("Une erreur est survenue lors de l'enregistrement.");
+    }
+  };
 
   return (
     <div className='gestion-dossier-container'>
@@ -185,17 +213,17 @@ export default function GestionDossier({ dossiers = [], rendezVous = [], medecin
                   onClick={() => setDossierSelectionne(dossier)}
                 >
                   <div className='dossier-item-header'>
-                    <span className='dossier-nom'>{dossier.nomPatient}</span>
-                    <span className={`dossier-statut statut-${dossier.statut}`}>{dossier.statut}</span>
+                    <span className='dossier-nom'>{dossier.username || 'Sans nom'}</span>
+                    <span className={`dossier-statut statut-${dossier.statut || 'actif'}`}>{dossier.statut || 'actif'}</span>
                   </div>
-                  <p className='dossier-date'>{new Date(dossier.dateCreation).toLocaleDateString('fr-FR')}</p>
+                  <p className='dossier-date'>{formatDate(dossier.created_at)}</p>
                 </li>
               ))}
             </ul>
           ) : (
             <div className='empty-state'>
               <p>Aucun dossier patient pour le moment</p>
-              {searchQuery && (
+              {query && (
                 <div className='quick-create'>
                   <p>Créer un dossier pour « {searchQuery} »</p>
                   <button className='btn-primary btn-small' onClick={handleCreateFromSearch}>Créer rapidement</button>
@@ -208,11 +236,11 @@ export default function GestionDossier({ dossiers = [], rendezVous = [], medecin
         {dossierSelectionne && (
           <div className='dossier-details'>
             <div className='details-header'>
-              <h3>{dossierSelectionne.nomPatient}</h3>
+              <h3>{dossierSelectionne.username}</h3>
               <div className='section-actions'>
                 <button className='btn-secondary btn-small' onClick={handleModifierDossier}>Modifier le dossier</button>
-                <span className={`statut-badge statut-${dossierSelectionne.statut}`}>
-                  {dossierSelectionne.statut}
+                <span className={`statut-badge statut-${dossierSelectionne.statut || 'actif'}`}>
+                  {dossierSelectionne.statut || 'actif'}
                 </span>
               </div>
             </div>
@@ -222,15 +250,11 @@ export default function GestionDossier({ dossiers = [], rendezVous = [], medecin
               <div className='info-grid'>
                 <div className='info-item'>
                   <label>Date de Naissance</label>
-                  <p>{formatDate(dossierSelectionne.dateNaissance)}</p>
+                  <p>{formatDate(dossierSelectionne.date_naissance)}</p>
                 </div>
                 <div className='info-item'>
                   <label>Email</label>
                   <p>{dossierSelectionne.email || '-'}</p>
-                </div>
-                <div className='info-item'>
-                  <label>Mot de passe patient</label>
-                  <p>{dossierSelectionne.password || '-'}</p>
                 </div>
                 <div className='info-item'>
                   <label>Téléphone</label>
@@ -242,15 +266,15 @@ export default function GestionDossier({ dossiers = [], rendezVous = [], medecin
                 </div>
                 <div className='info-item'>
                   <label>Groupe sanguin</label>
-                  <p>{dossierSelectionne.groupeSanguin || '-'}</p>
+                  <p>{dossierSelectionne.groupe_sanguin || '-'}</p>
                 </div>
                 <div className='info-item'>
                   <label>Antécédents</label>
-                  <p>{dossierSelectionne.antecedents || 'Aucun'}</p>
+                  <p>{dossierSelectionne.antecedents_medicaux || 'Aucun'}</p>
                 </div>
                 <div className='info-item'>
                   <label>Allergies</label>
-                  <p>{dossierSelectionne.allergies?.length > 0 ? dossierSelectionne.allergies.join(', ') : 'Aucune'}</p>
+                  <p>{dossierSelectionne.allergies || 'Aucune'}</p>
                 </div>
                 <div className='info-item'>
                   <label>Médecin responsable</label>
@@ -264,11 +288,11 @@ export default function GestionDossier({ dossiers = [], rendezVous = [], medecin
               <div className='info-grid'>
                 <div className='info-item'>
                   <label>Date de Création</label>
-                  <p>{formatDate(dossierSelectionne.dateCreation)}</p>
+                  <p>{formatDate(dossierSelectionne.created_at)}</p>
                 </div>
                 <div className='info-item'>
                   <label>Dernière Modification</label>
-                  <p>{formatDate(dossierSelectionne.dateModification)}</p>
+                  <p>{formatDate(dossierSelectionne.updated_at)}</p>
                 </div>
               </div>
             </div>
@@ -281,7 +305,7 @@ export default function GestionDossier({ dossiers = [], rendezVous = [], medecin
                 </button>
               </div>
 
-              {dossierSelectionne.documents.length > 0 ? (
+              {dossierSelectionne.documents?.length > 0 ? (
                 <div className='documents-list'>
                   {dossierSelectionne.documents.map(doc => (
                     <div key={doc.id} className='document-item'>
@@ -292,7 +316,7 @@ export default function GestionDossier({ dossiers = [], rendezVous = [], medecin
                       </div>
                       <div className='document-info'>
                         <p className='document-nom'>{doc.nom}</p>
-                        <p className='document-type'>{doc.type} • {new Date(doc.dateUpload).toLocaleDateString('fr-FR')}</p>
+                        <p className='document-type'>{doc.type} • {formatDate(doc.dateUpload)}</p>
                       </div>
                       <div className='document-size'>{(doc.taille / 1024).toFixed(2)} KB</div>
                     </div>
@@ -310,7 +334,7 @@ export default function GestionDossier({ dossiers = [], rendezVous = [], medecin
               {getSelectedRendezVous().length > 0 ? (
                 <div className='documents-list'>
                   {getSelectedRendezVous().map(rdv => {
-                    const medecin = medecins.find(m => m.id === rdv.medecinId)
+                    const medecin = medecins.find(m => m.id === rdv.medecinId);
                     return (
                       <div key={rdv.id} className='document-item'>
                         <div className='document-icon'>
@@ -319,12 +343,12 @@ export default function GestionDossier({ dossiers = [], rendezVous = [], medecin
                           </svg>
                         </div>
                         <div className='document-info'>
-                          <p className='document-nom'>{new Date(rdv.dateHeure).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' })}</p>
+                          <p className='document-nom'>{rdv.dateHeure ? new Date(rdv.dateHeure).toLocaleString('fr-FR') : '-'}</p>
                           <p className='document-type'>{rdv.motif} • {rdv.lieu}</p>
                         </div>
                         <div className='document-size'>{medecin ? `${medecin.nom} ${medecin.prenom}` : 'Médecin non attribué'}</div>
                       </div>
-                    )
+                    );
                   })}
                 </div>
               ) : (
@@ -336,11 +360,11 @@ export default function GestionDossier({ dossiers = [], rendezVous = [], medecin
 
             <div className='details-section'>
               <h4>Historique</h4>
-              {dossierSelectionne.historique.length > 0 ? (
+              {dossierSelectionne.historique?.length > 0 ? (
                 <div className='historique-list'>
                   {dossierSelectionne.historique.slice(-5).map(item => (
                     <div key={item.id} className='historique-item'>
-                      <div className='historique-date'>{new Date(item.dateAction).toLocaleDateString('fr-FR', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                      <div className='historique-date'>{formatDate(item.dateAction)}</div>
                       <div className='historique-content'>
                         <p className='historique-action'>{item.action}</p>
                         <p className='historique-details'>{item.details}</p>
@@ -374,6 +398,7 @@ export default function GestionDossier({ dossiers = [], rendezVous = [], medecin
                     <label>Nom du Patient</label>
                     <input
                       type="text"
+                      required
                       value={formData.nomPatient}
                       onChange={(e) => setFormData({ ...formData, nomPatient: e.target.value })}
                       placeholder="Entrez le nom du patient"
@@ -400,6 +425,7 @@ export default function GestionDossier({ dossiers = [], rendezVous = [], medecin
                     <label>Mot de passe du patient</label>
                     <input
                       type="password"
+                      required={typeModal === 'nouveau'}
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       placeholder="Choisir un mot de passe"
@@ -447,7 +473,7 @@ export default function GestionDossier({ dossiers = [], rendezVous = [], medecin
                       type="text"
                       value={formData.allergies}
                       onChange={(e) => setFormData({ ...formData, allergies: e.target.value })}
-                      placeholder="Séparez par des virgules"
+                      placeholder="Ex: Pénicilline, Arachides"
                     />
                   </div>
                   <div className='form-group'>
@@ -483,8 +509,8 @@ export default function GestionDossier({ dossiers = [], rendezVous = [], medecin
             </div>
 
             <div className='modal-footer'>
-              <button className='btn-secondary' onClick={() => setAfficherModal(false)}>Annuler</button>
-              <button className='btn-primary' type={typeModal === 'nouveau' ? 'submit' : 'button'} form={typeModal === 'nouveau' ? 'nouveau-dossier-form' : undefined}>
+              <button type='button' className='btn-secondary' onClick={() => setAfficherModal(false)}>Annuler</button>
+              <button className='btn-primary' type={typeModal === 'nouveau' || typeModal === 'edit' ? 'submit' : 'button'} form={typeModal === 'nouveau' || typeModal === 'edit' ? 'nouveau-dossier-form' : undefined}>
                 {typeModal === 'nouveau' ? 'Créer le dossier' : typeModal === 'edit' ? 'Enregistrer les modifications' : 'Importer le document'}
               </button>
             </div>
@@ -492,5 +518,5 @@ export default function GestionDossier({ dossiers = [], rendezVous = [], medecin
         </div>
       )}
     </div>
-  )
+  );
 }
